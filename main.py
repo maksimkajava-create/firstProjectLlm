@@ -5,6 +5,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime
+import hashlib
 from typing import Any, Dict, List, Optional
 import uuid
 import random
@@ -32,63 +33,79 @@ class User:
         id (int): Уникальный идентификатор пользователя
         email (str): Email (логин)
         password (str): Пароль
+        password_hash: Хэш пароля
         role (str): Роль пользователя, например 'client' или 'admin'
-        balance (float): Баланс для оплаты предсказаний
     """
 
     id: int
     email: str
     password: str
     role: str
-    balance: float = 0.0
+    password (str): InitVar[str]
+    password_hash: str = field(init=False)
 
-    def __post_init__(self) -> None:
+def __post_init__(self, password: str) -> None:
         self._validate_email()
-        self._validate_password()
-        self._validate_balance()
+        self._validate_and_hash_password(password)
 
-    def _validate_email(self) -> None:
+def _validate_email(self) -> None:
         """Проверяет корректность email"""
         email_pattern = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
         if not email_pattern.match(self.email):
             raise ValueError("Некорректный формат email")
 
-    def _validate_password(self) -> None:
-        """Проверяет минимальную длину пароля"""
-        if len(self.password) < 8:
+def _validate_and_hash_password(self, password: str) -> None:
+        """Проверяет минимальную длину пароля и сохраняет только его хэш"""
+        if len(password) < 8:
             raise ValueError("Пароль должен быть не короче 8 символов")
+        # Создаем хэш пароля с помощью sha256
+        self.password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
+
+@dataclass
+class Account:
+    """
+    Класс для управления балансом
+    Attributes:
+        balance (float): Баланс для оплаты предсказаний
+    """
+    balance: float = 0.0
+
+    def __post_init__(self) -> None:
+        self._validate_balance()
+
 
     def _validate_balance(self) -> None:
-        """Проверяет, что начальный баланс не отрицательный"""
+        """Проверяет начальный баланс"""
         if self.balance < 0:
             raise ValueError("Баланс не может быть отрицательным")
 
     def deposit(self, amount: float) -> None:
-        """Пополняет баланс пользователя"""
+        """Пополняет баланс"""
         if amount <= 0:
             raise ValueError("Сумма пополнения должна быть больше нуля")
         self.balance = self.balance + amount
 
     def withdraw(self, amount: float) -> None:
-        """Списывает средства с баланса пользователя"""
+        """Списывает средства"""
         if amount > self.balance:
             raise ValueError("Недостаточно средств на балансе")
         self.balance = self.balance - amount
+
+
 
 
 def make_test_users() -> List[User]:
     """Три тестовых пользователя: при каждом запуске другие email и баланс"""
     users: List[User] = []
     for i in range(1, 4):
-        balance = float(random.randint(50, 300))
+        randomBalance = float(random.randint(50, 300))
         suffix = random.randint(1000, 9999)
         user = User(
             id=i,
             email=f"user{i}_{suffix}@mail.ru",
             password="password123",
             role="client",
-            balance=balance,
-        )
+            account=Account(balance=randomBalance),)
         users.append(user)
     return users
 
@@ -317,9 +334,7 @@ def main() -> None:
             )
             prediction_result = demo_task.start_processing(request_history)
 
-            print("---")
             print(f"Пользователь #{task_index}: id={demo_user.id}, email={demo_user.email}")
-            print(f"Баланс после оплаты: {demo_user.balance}")
             print(f"Id результата: {prediction_result.id}")
             print(f"Вход в модель: {demo_input}")
             print(f"Задача: status={demo_task.status}, вывод модели={prediction_result.output_data}")
