@@ -1,0 +1,11 @@
+attrs==23.2.0
+Brotli==1.1.0
+chardet==5.2.0
+cryptography==42.0.5
+filelock==3.13.1
+protobuf==4.25.3
+redis==5.0.3
+simplejson==3.19.2
+typing_extensions==4.10.0
+python-dotenv
+requests

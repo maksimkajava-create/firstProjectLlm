@@ -3,7 +3,7 @@
 Запуск: python main.py
 """
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, InitVar
 from datetime import datetime
 import hashlib
 from typing import Any, Dict, List, Optional
@@ -41,7 +41,7 @@ class User:
     email: str
     password: str
     role: str
-    password (str): InitVar[str]
+    password: InitVar[str]
     password_hash: str = field(init=False)
 
 def __post_init__(self, password: str) -> None:
