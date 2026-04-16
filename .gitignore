@@ -6,6 +6,16 @@ env/
 # Кэш Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 # Секреты и настройки
 .env
+
+# IDE
+.idea/
+.vscode/
+
+# Docker volumes (если локально)
+postgres_data/
+rabbitmq_data/
