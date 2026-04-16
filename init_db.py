@@ -1,0 +1,40 @@
+from database import engine, Base, SessionLocal
+from models import User, MLModelConfig
+from services import create_user
+
+def init_db():
+    print("Создаем таблицы в БД...")
+
+    Base.metadata.create_all(bind=engine)
+
+    db = SessionLocal()
+    try:
+        demo_user = db.query(User).filter(User.email == "demo@mail.ru").first()
+        if not demo_user:
+            print("Создаем демо-пользователя...")
+            create_user(db, email="demo@mail.ru", password="demo_password", balance=150.0)
+        else:
+            print("Демо-пользователь уже существует.")
+            
+        base_model = db.query(MLModelConfig).filter(MLModelConfig.name == "SimpleClassifier").first()
+        if not base_model:
+            print("Создаем демо ML-модель...")
+            model = MLModelConfig(
+                name="SimpleClassifier",
+                description="Классификатор по сумме признаков",
+                cost_per_prediction=15.0
+            )
+            db.add(model)
+            db.commit()
+        else:
+            print("Демо ML-модель уже существует.")
+
+    except Exception as e:
+        print(f"Ошибка при инициализации БД: {e}")
+        db.rollback()
+    finally:
+        db.close()
+        print("Инициализация завершена.")
+
+if __name__ == "__main__":
+    init_db()

@@ -25,43 +25,6 @@ def random_demo_input() -> Dict[str, Any]:
 
 
 @dataclass
-class User:
-    """
-    Класс для представления пользователя в системе ML-сервиса
-
-    Attributes:
-        id (int): Уникальный идентификатор пользователя
-        email (str): Email (логин)
-        password (str): Пароль
-        password_hash: Хэш пароля
-        role (str): Роль пользователя, например 'client' или 'admin'
-    """
-
-    id: int
-    email: str
-    password: str
-    role: str
-    password: InitVar[str]
-    password_hash: str = field(init=False)
-
-def __post_init__(self, password: str) -> None:
-        self._validate_email()
-        self._validate_and_hash_password(password)
-
-def _validate_email(self) -> None:
-        """Проверяет корректность email"""
-        email_pattern = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
-        if not email_pattern.match(self.email):
-            raise ValueError("Некорректный формат email")
-
-def _validate_and_hash_password(self, password: str) -> None:
-        """Проверяет минимальную длину пароля и сохраняет только его хэш"""
-        if len(password) < 8:
-            raise ValueError("Пароль должен быть не короче 8 символов")
-        # Создаем хэш пароля с помощью sha256
-        self.password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
-
-@dataclass
 class Account:
     """
     Класс для управления балансом
@@ -91,7 +54,42 @@ class Account:
             raise ValueError("Недостаточно средств на балансе")
         self.balance = self.balance - amount
 
+@dataclass
+class User:
+    """
+    Класс для представления пользователя в системе ML-сервиса
 
+    Attributes:
+        id (int): Уникальный идентификатор пользователя
+        email (str): Email (логин)
+        password (str): Пароль
+        password_hash: Хэш пароля
+        role (str): Роль пользователя, например 'client' или 'admin'
+    """
+
+    id: int
+    email: str
+    password: str
+    role: str
+    password: InitVar[str]
+    password_hash: str = field(init=False)
+    account: Account
+
+    def __post_init__(self, password: str) -> None:
+        self._validate_email()
+        self._validate_and_hash_password(password)
+
+    def _validate_email(self) -> None:
+        """Проверяет корректность email"""
+        email_pattern = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
+        if not email_pattern.match(self.email):
+            raise ValueError("Некорректный формат email")
+
+    def _validate_and_hash_password(self, password: str) -> None:
+        """Проверяет минимальную длину пароля и сохраняет только его хэш"""
+        if len(password) < 8:
+            raise ValueError("Пароль должен быть не короче 8 символов")
+        self.password_hash = hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 
 def make_test_users() -> List[User]:
@@ -147,7 +145,7 @@ class DebitTransaction(Transaction):
 
     def apply(self) -> None:
         """Списывает сумму с баланса пользователя"""
-        self.user.withdraw(self.amount)
+        self.user.account.withdraw(self.amount)
 
 
 @dataclass
