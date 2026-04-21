@@ -13,8 +13,8 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
-from database import get_db
-from models import User
+from database.connection import get_db
+from models.entities import User
 
 SECRET_KEY: str = os.getenv("SECRET_KEY", "CMIP") 
 ALGORITHM: str = "HS256"

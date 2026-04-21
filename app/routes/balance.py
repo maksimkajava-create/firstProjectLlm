@@ -5,10 +5,10 @@
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from database import get_db
-from models import User
+from database.connection import get_db
+from models.entities import User
 from schemas import DepositRequest, BalanceResponse
-from services import process_transaction
+from services.crud.user import process_transaction
 from auth_utils import get_current_user
 
 router = APIRouter(prefix="/balance", tags=["Баланс"])

@@ -1,13 +1,13 @@
 """
 Точка входа FastAPI-приложения.
-Запуск: uvicorn app_api:app --host 0.0.0.0 --port 8000 --reload
+Запуск: uvicorn api:app --host 0.0.0.0 --port 8000
 """
 
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
-from database import engine, Base
-from routers import auth, users, balance, predict, history
+from database.connection import Base, engine
+from routes import auth, users, balance, predict, history
 
 
 @asynccontextmanager

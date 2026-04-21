@@ -8,10 +8,11 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from database import get_db
-from models import User, MLTask
+from database.connection import get_db
+from models.entities import MLTask, User
 from schemas import TaskHistoryItem, TransactionHistoryItem
-from services import get_user_history, get_user_transactions
+from services.crud.ml_task import get_user_history
+from services.crud.user import get_user_transactions
 from auth_utils import get_current_user
 
 router = APIRouter(prefix="/history", tags=["История"])

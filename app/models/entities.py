@@ -1,9 +1,9 @@
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, JSON
 from sqlalchemy.orm import relationship
-from database import Base
+from database.connection import Base
 
-# Обновление начинается тут ---------
+
 class User(Base):
     __tablename__ = "users"
 
@@ -12,10 +12,11 @@ class User(Base):
     password_hash = Column(String, nullable=False)
     role = Column(String, default="client")
 
-    # Связи 
+    # Связи
     transactions = relationship("Transaction", back_populates="user")
     tasks = relationship("MLTask", back_populates="user")
     account = relationship("Account", back_populates="user", uselist=False)
+
 
 class Account(Base):
     """Счёт пользователя — отвечает только за баланс"""
@@ -28,7 +29,6 @@ class Account(Base):
     # Связь
     user = relationship("User", back_populates="account")
 
-# Обновление заканчивается тут ---------
 
 class MLModelConfig(Base):
     """Описание ML-модели, доступной в системе"""
@@ -47,15 +47,15 @@ class MLTask(Base):
     __tablename__ = "ml_tasks"
 
     id = Column(Integer, primary_key=True, index=True)
+    task_uuid = Column(String, unique=True, index=True, nullable=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     model_id = Column(Integer, ForeignKey("ml_models.id"), nullable=False)
 
     input_data = Column(JSON, nullable=False)
-    output_data = Column(JSON, nullable=True) # Заполнится после выполнения
-    status = Column(String, default="pending") # pending, completed, failed
+    output_data = Column(JSON, nullable=True)
+    status = Column(String, default="pending")
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Связи
     user = relationship("User", back_populates="tasks")
     model = relationship("MLModelConfig", back_populates="tasks")
     transaction = relationship("Transaction", back_populates="task", uselist=False)
@@ -67,12 +67,11 @@ class Transaction(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    task_id = Column(Integer, ForeignKey("ml_tasks.id"), nullable=True) # Может быть None, если это пополнение
+    task_id = Column(Integer, ForeignKey("ml_tasks.id"), nullable=True)
 
     amount = Column(Float, nullable=False)
-    transaction_type = Column(String, nullable=False) # 'credit' (пополнение) или 'debit' (списание)
+    transaction_type = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Связи
     user = relationship("User", back_populates="transactions")
     task = relationship("MLTask", back_populates="transaction")

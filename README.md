@@ -1,19 +1,45 @@
 # firstProjectLlm
 
-ML-сервис с REST API и Telegram-ботом. Пользователи регистрируются, пополняют баланс и отправляют ML-запросы через бота или Swagger UI.
+ML-сервис с REST API и Telegram-ботом. Пользователи регистрируются, пополняют баланс и отправляют ML-задачи через бота или Swagger UI. Задачи обрабатываются воркерами через очередь RabbitMQ.
 
 ## Стек технологий
 
 - **FastAPI** — REST API
 - **aiogram 3** — Telegram-бот
 - **PostgreSQL 15** — база данных
-- **RabbitMQ** — очередь сообщений
+- **RabbitMQ** — очередь задач (publisher → workers)
 - **nginx** — обратный прокси
-- **Docker Compose** — оркестрация контейнеров
+- **Docker Compose** — оркестрация
+
+## Структура проекта
+
+```
+/
+├── app/                    # Основное приложение
+│   ├── database/           # Подключение к БД
+│   ├── models/             # SQLAlchemy модели
+│   ├── routes/             # FastAPI роутеры
+│   ├── services/           # crud/ (user, ml_task) + rm/ (RabbitMQ)
+│   ├── api.py              # FastAPI приложение
+│   ├── main.py             # Запуск API + бота
+│   ├── bot.py              # Telegram-бот
+│   ├── auth_utils.py       # JWT аутентификация
+│   ├── schemas.py          # Pydantic схемы
+│   ├── requirements.txt
+│   └── Dockerfile
+├── ml_worker/              # ML-воркеры (2 реплики)
+│   ├── worker.py
+│   └── Dockerfile
+├── nginx/                  # Обратный прокси
+│   ├── nginx.conf
+│   └── Dockerfile
+├── .env
+└── docker-compose.yml
+```
 
 ## Быстрый старт
 
-### 1. Создай файл `.env` в корне проекта
+### 1. Создай `.env` в корне проекта
 
 ```env
 POSTGRES_USER=admin
@@ -26,55 +52,45 @@ BOT_TOKEN=токен_от_botfather
 API_BASE_URL=http://app:8000
 ```
 
-> Токен бота получи у [@BotFather](https://t.me/BotFather) в Telegram
+> Токен бота получи у [@BotFather](https://t.me/BotFather)
 
-### 2. Запусти через Docker Compose
+### 2. Запусти
 
 ```bash
 docker compose up --build
 ```
 
-### 3. Открой документацию API
+### 3. Swagger UI
 
 ```
 http://localhost/docs
 ```
 
-## Доступные сервисы
+## Сервисы
 
-| Сервис       | Адрес                    |
-|--------------|--------------------------|
-| Swagger UI   | http://localhost/docs    |
-| RabbitMQ UI  | http://localhost:15672   |
-| PostgreSQL   | localhost:5432           |
+| Сервис      | Адрес                  |
+|-------------|------------------------|
+| Swagger UI  | http://localhost/docs  |
+| RabbitMQ UI | http://localhost:15672 |
+| PostgreSQL  | localhost:5432         |
+
+## Архитектура обработки ML-задач
+
+```
+POST /predict → publisher → очередь RabbitMQ → worker-1 
+                                                          БД (результат)
+                                             → worker-2 
+GET /predict/{task_uuid} → статус задачи
+```
 
 ## Команды Telegram-бота
 
-| Команда                            | Описание                    |
-|------------------------------------|-----------------------------|
-| `/start`                           | Справка                     |
-| `/register <email> <пароль>`       | Регистрация                 |
-| `/login <email> <пароль>`          | Авторизация                 |
-| `/balance`                         | Текущий баланс              |
-| `/deposit <сумма>`                 | Пополнить баланс            |
-| `/predict <model_id> <f1> <f2>`    | ML-предсказание             |
-| `/history`                         | История запросов            |
-
-## Структура проекта
-
-```
-.
-├── app/                  # Dockerfile приложения
-├── routers/              # Роутеры FastAPI (auth, users, balance, predict, history)
-├── web-proxy/            # Dockerfile nginx
-├── app_api.py            # Точка входа FastAPI
-├── bot.py                # Telegram-бот
-├── main.py               # Запуск API и бота одновременно
-├── models.py             # Модели SQLAlchemy
-├── schemas.py            # Схемы Pydantic
-├── services.py           # Бизнес-логика
-├── auth_utils.py         # JWT аутентификация
-├── database.py           # Подключение к БД
-├── docker-compose.yml
-└── requirements.txt
-```
+| Команда                          | Описание          |
+|----------------------------------|-------------------|
+| `/start`                         | Справка           |
+| `/register <email> <пароль>`     | Регистрация       |
+| `/login <email> <пароль>`        | Авторизация       |
+| `/balance`                       | Текущий баланс    |
+| `/deposit <сумма>`               | Пополнить баланс  |
+| `/predict <model_id> <f1> <f2>`  | ML-предсказание   |
+| `/history`                       | История запросов  |

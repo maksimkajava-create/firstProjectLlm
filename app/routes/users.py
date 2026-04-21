@@ -5,7 +5,7 @@
 
 from fastapi import APIRouter, Depends
 
-from models import User
+from models.entities import User
 from schemas import UserResponse
 from auth_utils import get_current_user
 

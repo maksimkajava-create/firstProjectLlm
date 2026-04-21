@@ -4,17 +4,43 @@ services:
       context: .
       dockerfile: ./app/Dockerfile
     env_file:
-      - .env                 
+      - .env
     volumes:
-      - ./:/app              
+      - ./app:/app
     depends_on:
-      - database 
+      - database
       - rabbitmq
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./ml_worker/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+      - database
+    deploy:
+      replicas: 2
+    restart: on-failure
+
+  bot:
+    build:
+      context: .
+      dockerfile: ./app/Dockerfile
+    env_file:
+      - .env
+    volumes:
+      - ./app:/app
+    command: ["python", "bot.py"]
+    depends_on:
+      - app
+    restart: on-failure
 
   web-proxy:
     build:
       context: .
-      dockerfile: ./web-proxy/Dockerfile
+      dockerfile: ./nginx/Dockerfile
     ports:
       - "80:80"
       - "443:443"
@@ -27,8 +53,9 @@ services:
       - "5672:5672"
       - "15672:15672"
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq  
-    restart: on-failure 
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: on-failure
+
   database:
     image: postgres:15
     ports:
@@ -36,7 +63,8 @@ services:
     env_file:
       - .env
     volumes:
-      - postgres_data:/var/lib/postgresql/data 
+      - postgres_data:/var/lib/postgresql/data
+
 volumes:
   rabbitmq_data:
   postgres_data:

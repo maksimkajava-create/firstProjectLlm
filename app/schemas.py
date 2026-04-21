@@ -67,16 +67,25 @@ class PredictRequest(BaseModel):
 
 class PredictResponse(BaseModel):
     """Результат ML-предсказания"""
-    task_id: int
+    task_id: str #теперь строка
     status: str
     output_data: Optional[Dict[str, Any]] = None
     cost: float
 
     model_config = {"from_attributes": True}
 
+class TaskStatusResponse(BaseModel):
+    """Для проверки статуса задач по uuid"""
+    task_id: str
+    status: str
+    input_data: Dict[str, Any]
+    output_data: Optional[Dict[str, Any]] = None
+    created_at: datetime
+
 class TaskHistoryItem(BaseModel):
     """Одна запись из истории ML-задач"""
     id: int
+    task_uuid: Optional[str] = None
     model_id: int
     input_data: Dict[str, Any]
     output_data: Optional[Dict[str, Any]] = None

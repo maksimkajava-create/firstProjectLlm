@@ -249,6 +249,33 @@ async def cmd_predict(message: Message) -> None:
     else:
         await message.answer(f"❌ Ошибка: {body.get('detail', 'Неизвестная ошибка')}")
 
+@router.message(Command("status"))
+async def cmd_status(message: Message) -> None:
+    token = get_token(message.from_user.id)
+    if not token:
+        await message.answer(require_auth_message())
+        return
+    parts = message.text.split()
+    if len(parts) != 2:
+        await message.answer("Использование:\n/status <task_uuid>")
+        return
+    task_uuid = parts[1]
+    status_code, body = await api_request("GET", f"/predict/{task_uuid}", token=token)
+    if status_code == 200:
+        status_emoji = {"pending": "⏳", "completed": "✅", "failed": "❌"}.get(body["status"], "❓")
+        text = (
+            f"{status_emoji} <b>Статус: {body['status']}</b>\n\n"
+            f"🆔 task_id: <code>{body['task_id']}</code>\n"
+            f"📥 Вход: {body['input_data']}\n"
+        )
+        if body.get("output_data"):
+            text += f"🎯 Результат: {body['output_data']}\n"
+        text += f"📅 Создана: {body['created_at']}"
+        await message.answer(text, parse_mode="HTML")
+    elif status_code == 404:
+        await message.answer("❌ Задача не найдена")
+    else:
+        await message.answer(f"❌ Ошибка: {body.get('detail', 'Неизвестная ошибка')}")
 
 # ── История ──────────────────────────────────────────────
 

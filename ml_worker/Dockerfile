@@ -4,4 +4,5 @@ RUN apt-get update && apt-get install -y gcc python3-dev && rm -rf /var/lib/apt/
 COPY app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY app/ .
-CMD ["python", "main.py"]
+COPY ml_worker/worker.py .
+CMD ["python", "worker.py"]

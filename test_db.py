@@ -1,6 +1,7 @@
-from database import SessionLocal
-from models import User, MLModelConfig, MLTask
-from services import process_transaction, get_user_history
+from database.connection import SessionLocal
+from models.entities import MLModelConfig, MLTask, User
+from services.crud.ml_task import get_user_history
+from services.crud.user import process_transaction
 
 def run_tests():
     db = SessionLocal()

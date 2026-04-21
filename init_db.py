@@ -1,6 +1,6 @@
-from database import engine, Base, SessionLocal
-from models import User, MLModelConfig
-from services import create_user
+from database.connection import Base, SessionLocal, engine
+from models.entities import MLModelConfig, User
+from services.crud.user import create_user
 
 def init_db():
     print("Создаем таблицы в БД...")

@@ -3,14 +3,17 @@
 Роутер: ML-предсказания (/predict)
 """
 
+from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from database import get_db
-from models import User, MLModelConfig
-from schemas import PredictRequest, PredictResponse
-from services import run_prediction
+from database.connection import get_db
+from models.entities import MLModelConfig, User
+from schemas import PredictRequest, PredictResponse, TaskStatusResponse
+from services.crud.ml_task import create_pending_task, get_task_by_uuid
 from auth_utils import get_current_user
+from services.rm.rm import publish_task
+
 
 router = APIRouter(prefix="/predict", tags=["ML-предсказания"])
 
@@ -29,9 +32,7 @@ def predict(
     Cценарий:
     1. Найти ML-модель по id
     2. Проверить достаточность баланса
-    3. Выполнить предсказание
-    4. Списать стоимость с баланса
-    5. Сохранить задачу и транзакцию в бд
+    3. Отправить задачу в очередь
     """
     # 1 найти модель
     model = (
@@ -56,9 +57,9 @@ def predict(
             ),
         )
 
-    # 3-5 предсказание + списание + сохранение
+    # 3 отправка задачи в очередь
     try:
-        task = run_prediction(
+        task = create_pending_task(
             db, user=current_user, model=model, features=data.features
         )
     except ValueError as e:
@@ -66,10 +67,45 @@ def predict(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str(e),
         )
-
+    message = {
+        "task_id": task.task_uuid,
+        "features": data.features,
+        "model": model.name,
+        "timestamp": datetime.now(timezone.utc).isoformat()
+    }
+    try:
+        publish_task(message)
+    except Exception:
+        task.status = "failed"
+        db.commit()
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Сервис обработки временно недоступен",
+        )
     return PredictResponse(
-        task_id=task.id,
+        task_id=task.task_uuid,
         status=task.status,
+        cost=model.cost_per_prediction,
+    )
+
+@router.get("/{task_uuid}", response_model=TaskStatusResponse)
+def get_prediction_status(
+    task_uuid: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Получение стататуса предсказания"""
+    task = get_task_by_uuid(db, task_uuid=task_uuid, user_id=current_user.id)
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Задача не найдена!"
+        )
+    
+    return TaskStatusResponse(
+        task_id=task.task_uuid,
+        status=task.status,
+        input_data=task.input_data,
         output_data=task.output_data,
-        cost=cost,
+        created_at=task.created_at
     )
