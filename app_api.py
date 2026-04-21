@@ -3,14 +3,21 @@
 Запуск: uvicorn app_api:app --host 0.0.0.0 --port 8000 --reload
 """
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from database import engine, Base
 from routers import auth, users, balance, predict, history
 
-# Создание таблиц при старте (если ещё не существуют)
-Base.metadata.create_all(bind=engine)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Base.metadata.create_all(bind=engine)
+    yield
+
 
 app = FastAPI(
+    lifespan=lifespan,
     title="ML Service REST API",
     description="REST API для ML-сервиса предсказаний",
     version="1.0.0",

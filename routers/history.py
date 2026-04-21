@@ -5,11 +5,11 @@
 
 from typing import List
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from database import get_db
-from models import User
+from models import User, MLTask
 from schemas import TaskHistoryItem, TransactionHistoryItem
 from services import get_user_history, get_user_transactions
 from auth_utils import get_current_user
@@ -32,6 +32,29 @@ def tasks_history(
     """
     tasks = get_user_history(db, current_user.id)
     return tasks
+
+
+@router.get(
+    "/tasks/{task_id}",
+    response_model=TaskHistoryItem,
+    summary="Получить задачу по ID",
+)
+def get_task(
+    task_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Возвращает задачу по task_id. Доступна только владельцу."""
+    task = db.query(MLTask).filter(
+        MLTask.id == task_id,
+        MLTask.user_id == current_user.id,
+    ).first()
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Задача не найдена",
+        )
+    return task
 
 
 @router.get(
