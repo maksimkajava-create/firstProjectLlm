@@ -67,5 +67,5 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Неверный email или пароль",
         )
-    token = create_access_token(data={"sub": user.id})
+    token = create_access_token(data={"sub": str(user.id)})
     return TokenResponse(access_token=token)

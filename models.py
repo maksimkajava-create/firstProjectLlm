@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, JSO
 from sqlalchemy.orm import relationship
 from database import Base
 
+# Обновление начинается тут ---------
 class User(Base):
     __tablename__ = "users"
 
@@ -10,12 +11,24 @@ class User(Base):
     email = Column(String, unique=True, index=True, nullable=False)
     password_hash = Column(String, nullable=False)
     role = Column(String, default="client")
-    balance = Column(Float, default=0.0)
 
     # Связи 
     transactions = relationship("Transaction", back_populates="user")
     tasks = relationship("MLTask", back_populates="user")
+    account = relationship("Account", back_populates="user", uselist=False)
 
+class Account(Base):
+    """Счёт пользователя — отвечает только за баланс"""
+    __tablename__ = "accounts"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    balance = Column(Float, default=0.0)
+
+    # Связь
+    user = relationship("User", back_populates="account")
+
+# Обновление заканчивается тут ---------
 
 class MLModelConfig(Base):
     """Описание ML-модели, доступной в системе"""

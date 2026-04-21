@@ -8,14 +8,41 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.pyo
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
 
 # Секреты и настройки
 .env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*.p12
+secrets/
 
 # IDE
 .idea/
 .vscode/
+*.code-workspace
 
 # Docker volumes (если локально)
 postgres_data/
 rabbitmq_data/
+
+# Логи
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Дистрибутив / сборка
+dist/
+build/
+*.egg-info/
+.eggs/

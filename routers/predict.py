@@ -47,12 +47,12 @@ def predict(
 
     #2 проверить баланс
     cost = model.cost_per_prediction
-    if current_user.balance < cost:
+    if current_user.account.balance < cost:
         raise HTTPException(
             status_code=status.HTTP_402_PAYMENT_REQUIRED,
             detail=(
                 f"Недостаточно средств на балансе. "
-                f"Требуется: {cost}, доступно: {current_user.balance}"
+                f"Требуется: {cost}, доступно: {current_user.account.balance}"
             ),
         )
 

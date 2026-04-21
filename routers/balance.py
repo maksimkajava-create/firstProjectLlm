@@ -21,7 +21,7 @@ router = APIRouter(prefix="/balance", tags=["Баланс"])
 )
 def get_balance(current_user: User = Depends(get_current_user)):
     """Возвращает текущий баланс авторизованного пользователя."""
-    return BalanceResponse(balance=current_user.balance)
+    return BalanceResponse(balance=current_user.account.balance)
 
 
 @router.post(
@@ -42,4 +42,4 @@ def deposit(
         db, user=current_user, amount=data.amount, t_type="credit"
     )
     db.refresh(current_user)
-    return BalanceResponse(balance=current_user.balance)
+    return BalanceResponse(balance=current_user.account.balance)

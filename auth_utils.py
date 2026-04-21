@@ -10,7 +10,7 @@ from typing import Optional
 
 from jose import JWTError, jwt
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -20,7 +20,7 @@ SECRET_KEY: str = os.getenv("SECRET_KEY", "CMIP")
 ALGORITHM: str = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+_bearer = HTTPBearer()
 
 
 def create_access_token(
@@ -38,13 +38,10 @@ def create_access_token(
 
 
 def get_current_user(
-    token: str = Depends(oauth2_scheme),
+    credentials: HTTPAuthorizationCredentials = Depends(_bearer),
     db: Session = Depends(get_db),
 ) -> User:
-    """
-    Извлекает пользователя из JWT-токена.
-    Используется как Depends(get_current_user) в эндпоинтах.
-    """
+    token = credentials.credentials
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Невалидный токен аутентификации",
@@ -52,9 +49,10 @@ def get_current_user(
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: Optional[int] = payload.get("sub")
-        if user_id is None:
+        sub = payload.get("sub")
+        if sub is None:
             raise credentials_exception
+        user_id = int(sub)
     except JWTError:
         raise credentials_exception
 

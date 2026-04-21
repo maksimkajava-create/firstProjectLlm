@@ -29,12 +29,19 @@ class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
 
+class AccountResponse(BaseModel):
+    """Данные счёта"""
+    id: int
+    balance: float
+
+    model_config = {"from_attributes": True}
+
 class UserResponse(BaseModel):
     """Данные пользователя (публичная часть)"""
     id: int
     email: str
     role: str
-    balance: float
+    account: Optional[AccountResponse] = None
     model_config = {"from_attributes": True}
 
 class DepositRequest(BaseModel):

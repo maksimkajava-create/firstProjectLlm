@@ -5,7 +5,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 import hashlib
-from models import User, Transaction, MLTask, MLModelConfig
+from models import User, Account, Transaction, MLTask, MLModelConfig
 
 def create_user(
     db: Session,
@@ -17,10 +17,17 @@ def create_user(
     hashed_pwd = hashlib.sha256(password.encode("utf-8")).hexdigest()
     db_user = User(
         email=email,
-        password_hash=hashed_pwd,
-        balance=balance,
+        password_hash=hashed_pwd
     )
     db.add(db_user)
+    db.commit()
+    db.flush()
+
+    db_account = Account(
+        user_id = db_user.id,
+        balance = balance
+    )
+    db.add(db_account)
     db.commit()
     db.refresh(db_user)
     return db_user
@@ -34,10 +41,11 @@ def process_transaction(
     task_id: int = None,
 ) -> Transaction:
     """Пополнение или списание баланса"""
+    account = user.account
     if t_type == "debit":
-        if user.balance < amount:
+        if account.balance < amount:
             raise ValueError("Недостаточно средств на балансе")
-        user.balance -= amount
+        account.balance -= amount
     elif t_type == "credit":
         user.balance += amount
     else:
