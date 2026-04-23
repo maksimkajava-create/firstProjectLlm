@@ -8,6 +8,9 @@ import hashlib
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
+from schemas import UserRegister, TokenResponse, UserResponse, ResetPasswordRequest
+from services.crud.user import create_user, reset_password
+
 
 from database.connection import get_db
 from models.entities import User
@@ -69,3 +72,15 @@ def login(
         )
     token = create_access_token(data={"sub": str(user.id)})
     return TokenResponse(access_token=token)
+
+@router.post(
+    "/reset-password",
+    summary="Сброс пароля (упрощённый)",
+)
+def reset_pwd(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Упрощённый сброс пароля"""
+    try:
+        reset_password(db, email=data.email, new_password=data.new_password)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    return {"message": "Пароль успешно изменён"}

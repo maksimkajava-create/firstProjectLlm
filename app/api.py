@@ -7,7 +7,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from database.connection import Base, engine
-from routes import auth, users, balance, predict, history
+from routes import auth, users, balance, predict, history, models, admin
 
 
 @asynccontextmanager
@@ -17,6 +17,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
+    root_path="/api",
     lifespan=lifespan,
     title="ML Service REST API",
     description="REST API для ML-сервиса предсказаний",
@@ -27,7 +28,8 @@ app.include_router(users.router)
 app.include_router(balance.router)
 app.include_router(predict.router)
 app.include_router(history.router)
-
+app.include_router(models.router)
+app.include_router(admin.router)
 
 @app.get("/", tags=["Root"])
 def root():

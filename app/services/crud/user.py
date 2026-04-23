@@ -68,3 +68,45 @@ def get_user_transactions(db: Session, user_id: int):
         .order_by(desc(Transaction.created_at))
         .all()
     )
+
+
+def reset_password(db: Session, email: str, new_password: str) -> User:
+    """СБрос пароля"""
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise ValueError("Пользователь с таким email не найден")
+    user.password_hash = hashlib.sha256(new_password.encode("utf-8")).hexdigest()
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def update_user_profile(
+    db: Session,
+    user: User,
+    email: str = None,
+    old_password: str = None,
+    new_password: str = None,
+) -> User:
+    """Обновления инфо пользователя"""
+    if email and email != user.email:
+        existing = db.query(User).filter(User.email == email, User.id != user.id).first()
+        if existing:
+            raise ValueError("Email уже занят другим пользователем")
+        user.email = email
+
+    if new_password:
+        if not old_password:
+            raise ValueError("Укажите текущий пароль для смены")
+        old_hash = hashlib.sha256(old_password.encode("utf-8")).hexdigest()
+        if user.password_hash != old_hash:
+            raise ValueError("Неверный текущий пароль")
+        user.password_hash = hashlib.sha256(new_password.encode("utf-8")).hexdigest()
+
+    db.commit()
+    db.refresh(user)
+    return user
+
+
+def get_all_users(db: Session):
+    return db.query(User).all()

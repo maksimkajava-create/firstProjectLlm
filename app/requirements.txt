@@ -17,3 +17,4 @@ aiogram
 aiohttp
 redis
 celery
+psycopg2-binary

@@ -16,6 +16,15 @@ def init_db():
         else:
             print("Демо-пользователь уже существует.")
             
+        admin_user = db.query(User).filter(User.email == "admin@mail.ru").first()
+        if not admin_user:
+            print("Создаем администратора...")
+            admin = create_user(db, email="admin@mail.ru", password="admin_password", balance=500.0)
+            admin.role = "admin"
+            db.commit()
+        else:
+            print("Администратор уже существует.")
+            
         base_model = db.query(MLModelConfig).filter(MLModelConfig.name == "SimpleClassifier").first()
         if not base_model:
             print("Создаем демо ML-модель...")

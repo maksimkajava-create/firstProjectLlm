@@ -77,3 +77,35 @@ def get_task_by_uuid(db: Session, task_uuid: str, user_id: int):
         .filter(MLTask.task_uuid == task_uuid, MLTask.user_id == user_id)
         .first()
     )
+
+def get_all_models(db: Session):
+    return db.query(MLModelConfig).all()
+
+
+def create_model(db: Session, name: str, description: str, cost: float) -> MLModelConfig:
+    """Создание модели"""
+    existing = db.query(MLModelConfig).filter(MLModelConfig.name == name).first()
+    if existing:
+        raise ValueError("Модель с таким именем уже существует")
+    model = MLModelConfig(name=name, description=description, cost_per_prediction=cost)
+    db.add(model)
+    db.commit()
+    db.refresh(model)
+    return model
+
+
+def delete_model(db: Session, model_id: int) -> None:
+    """Удаление модели (для администратора)"""
+    model = db.query(MLModelConfig).filter(MLModelConfig.id == model_id).first()
+    if not model:
+        raise ValueError("Модель не найдена")
+    db.delete(model)
+    db.commit()
+
+
+def get_all_tasks(db: Session):
+    return (
+        db.query(MLTask)
+        .order_by(desc(MLTask.created_at))
+        .all()
+    )
