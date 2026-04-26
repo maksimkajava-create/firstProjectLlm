@@ -50,6 +50,10 @@ SECRET_KEY=секретный_ключ
 RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
 BOT_TOKEN=токен_от_botfather
 API_BASE_URL=http://app:8000
+LLM_API_KEY=ollama
+LLM_BASE_URL=http://ollama:11434/v1
+LLM_MODEL_ID=2          
+LLM_POLL_TIMEOUT=120    
 ```
 
 > Токен бота получи у [@BotFather](https://t.me/BotFather)
@@ -85,12 +89,14 @@ GET /predict/{task_uuid} → статус задачи
 
 ## Команды Telegram-бота
 
-| Команда                          | Описание          |
-|----------------------------------|-------------------|
-| `/start`                         | Справка           |
-| `/register <email> <пароль>`     | Регистрация       |
-| `/login <email> <пароль>`        | Авторизация       |
-| `/balance`                       | Текущий баланс    |
-| `/deposit <сумма>`               | Пополнить баланс  |
-| `/predict <model_id> <f1> <f2>`  | ML-предсказание   |
-| `/history`                       | История запросов  |
+| Команда                          | Описание                       |
+|----------------------------------|--------------------------------|
+| `/start`                         | Справка                        |
+| `/register <email> <пароль>`     | Регистрация                    |
+| `/login <email> <пароль>`        | Авторизация                    |
+| `/balance`                       | Текущий баланс                 |
+| `/deposit <сумма>`               | Пополнить баланс               |
+| `/predict <model_id> <f1> <f2>`  | ML-предсказание                |
+|`/prompt   <текст>`               |запрос к LLM (Ollama)           |
+|`/prompt   <model_id> <текст>`    | запрос к конкретной LLM-модели |
+| `/history`                       | История запросов               |
