@@ -56,11 +56,12 @@ def predict(
                 f"Требуется: {cost}, доступно: {current_user.account.balance}"
             ),
         )
+    features = [float(f) for f in data.features] if data.features else None
 
     # 3 отправка задачи в очередь
     try:
         task = create_pending_task(
-            db, user=current_user, model=model, features=data.features
+            db, user=current_user, model=model, features=features, prompt=data.prompt
         )
     except ValueError as e:
         raise HTTPException(
@@ -70,6 +71,7 @@ def predict(
     message = {
         "task_id": task.task_uuid,
         "features": data.features,
+        "prompt": data.prompt,
         "model": model.name,
         "timestamp": datetime.now(timezone.utc).isoformat()
     }

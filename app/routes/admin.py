@@ -56,7 +56,7 @@ def admin_create_model(
     admin: User = Depends(get_admin_user),
 ):
     try:
-        model = create_model(db, name=data.name, description=data.description, cost=data.cost_per_prediction)
+        model = create_model(db, name=data.name, description=data.description, cost=data.cost_per_prediction, model_type=data.model_type)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
     return model

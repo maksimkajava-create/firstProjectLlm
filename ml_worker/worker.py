@@ -42,20 +42,32 @@ def process_message(ch, method, properties, body):
     message = json.loads(body)
     task_uuid = message.get("task_id")
     features = message.get("features")
+    prompt = message.get("prompt")
     model_name = message.get("model")
 
     logging.info(f"Получена задача: {task_uuid}")
 
-    if not task_uuid or not features or not model_name:
+    if not task_uuid or not model_name:
         logging.error(f"Невалидное сообщение: {message}")
         ch.basic_ack(delivery_tag=method.delivery_tag)
         return
 
+    if not features and not prompt:
+        logging.error(f"Нет features и prompt: {message}")
+        ch.basic_ack(delivery_tag=method.delivery_tag)
+        return
+
+
     try:
-        input_data = {"features": features}
+        input_data = {}
+        if features:
+            input_data["features"] = features
+        if prompt:
+            input_data["prompt"] = prompt
+
         output_data = execute_prediction(model_name, input_data)
         result_status = "completed"
-        logging.info(f"Предсказание: {output_data}")
+        logging.info(f"Предсказание {task_uuid} выполнено")
     except Exception as e:
         output_data = {"error": str(e)}
         result_status = "failed"
@@ -77,15 +89,7 @@ def process_message(ch, method, properties, body):
     finally:
         db.close()
 
-    ch.basic_ack(delivery_tag=method.delivery_tag) #сообщение было успешно получено и обработано
-
-    result = {
-        "task_id": task_uuid,
-        "prediction": output_data,
-        "worker_id": WORKER_ID,
-        "status": result_status,
-    }
-    logging.info(f"Результат: {json.dumps(result, ensure_ascii=False)}")
+    ch.basic_ack(delivery_tag=method.delivery_tag)
 
 
 def main():

@@ -66,7 +66,15 @@ services:
       - .env
     volumes:
       - postgres_data:/var/lib/postgresql/data
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: on-failure
 
 volumes:
   rabbitmq_data:
   postgres_data:
+  ollama_data:

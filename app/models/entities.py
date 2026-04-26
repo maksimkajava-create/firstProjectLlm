@@ -38,7 +38,7 @@ class MLModelConfig(Base):
     name = Column(String, nullable=False, unique=True)
     description = Column(String)
     cost_per_prediction = Column(Float, nullable=False)
-
+    model_type = Column(String, default="classifier")
     tasks = relationship("MLTask", back_populates="model")
 
 
@@ -75,3 +75,4 @@ class Transaction(Base):
 
     user = relationship("User", back_populates="transactions")
     task = relationship("MLTask", back_populates="transaction")
+

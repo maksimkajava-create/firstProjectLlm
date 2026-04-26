@@ -6,7 +6,7 @@ import re
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 class UserRegister(BaseModel):
     """Схема регистрации нового пользователя"""
@@ -55,15 +55,15 @@ class BalanceResponse(BaseModel):
 
 class PredictRequest(BaseModel):
     """Запрос на ML-предсказание"""
-    model_id: int = Field(description="ID ML-модели")
-    features: List[float] = Field(description="Список признаков")
+    model_id: int
+    features: Optional[List[float]] = None
+    prompt: Optional[str] = None
 
-    @field_validator("features")
-    @classmethod
-    def features_not_empty(cls, v: List[float]) -> List[float]:
-        if len(v) == 0:
-            raise ValueError("Список признаков не может быть пустым")
-        return v
+    @model_validator(mode='after')
+    def check_input(self):
+        if not self.features and not self.prompt:
+            raise ValueError("Укажите features или prompt")
+        return self
 
 class PredictResponse(BaseModel):
     """Результат ML-предсказания"""
@@ -140,7 +140,7 @@ class ModelResponse(BaseModel):
     name: str
     description: Optional[str] = None
     cost_per_prediction: float
-
+    model_type: str = "classifier"
     model_config = {"from_attributes": True}
 
 
@@ -149,7 +149,7 @@ class ModelCreateRequest(BaseModel):
     name: str = Field(min_length=1)
     description: Optional[str] = None
     cost_per_prediction: float = Field(gt=0)
-
+    model_type: str = Field(default="classifier", pattern="^(classifier|llm)$")
 
 class AdminUserItem(BaseModel):
     """Для реализации панели администратора"""

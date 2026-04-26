@@ -37,6 +37,20 @@ def init_db():
             db.commit()
         else:
             print("Демо ML-модель уже существует.")
+            
+        gemma = db.query(MLModelConfig).filter(MLModelConfig.name == "gemma3:4b").first()
+        if not gemma:
+            print("Создаем Gemma модель...")
+            llm = MLModelConfig(
+                name="gemma3:4b",
+                description="Google Gemma 3 4B (локально через Ollama)",
+                cost_per_prediction=2.0,
+                model_type="llm",
+            )
+            db.add(llm)
+            db.commit()
+        else:
+            print("Gemma модель уже существует.")
 
     except Exception as e:
         print(f"Ошибка при инициализации БД: {e}")
