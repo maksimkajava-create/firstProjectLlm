@@ -100,3 +100,17 @@ GET /predict/{task_uuid} → статус задачи
 |`/prompt   <текст>`               |запрос к LLM (Ollama)           |
 |`/prompt   <model_id> <текст>`    | запрос к конкретной LLM-модели |
 | `/history`                       | История запросов               |
+
+
+## Тесты
+```
+Тесты всех обязательных сценариев
+1) Поднимаем всю систему
+    docker-compose up -d
+2) Инициализируем БД 
+    docker-compose exec app python init_db.py
+3) Ставим зависимости для тестов
+    pip install -r requirements-test.txt
+4) Запускаем тесты
+    pytest test_system.py -v -s
+```
