@@ -82,7 +82,7 @@ class TestEnvironment:
     """Проверка системы"""
 
     def test_api_root_responds(self):
-        """GET\ - корневой эндпоинт FastAPI"""
+        """GET - корневой эндпоинт FastAPI"""
         resp = requests.get(f"{BASE_URL}/")
         assert resp.status_code == 200
         assert "ML Service" in resp.json().get("message", "")
@@ -619,4 +619,4 @@ class TestEndToEnd:
         types = {t["transaction_type"] for t in txns}
         assert types == {"credit", "debit"}
         print("История транзакций: 2 записи (credit + debit)")
-        print("СКвозной тест пройден!")
+        print("Сквозной тест пройден!")

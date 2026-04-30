@@ -74,6 +74,26 @@ services:
       - ollama_data:/root/.ollama
     restart: on-failure
 
+  ollama-init:
+    image: curlimages/curl:latest
+    depends_on:
+      - ollama
+    entrypoint: >
+      sh -c '
+        echo "Проверка наличия gemma3:4b"
+        if curl -s http://ollama:11434/api/tags | grep -q "gemma3:4b"; then
+          echo "gemma3:4b уже загружена"
+        else
+          echo "Загрузка gemma3:4b..."
+          curl -X POST http://ollama:11434/api/pull \
+            -d "{\"name\": \"gemma3:4b\"}" \
+            --no-buffer
+          echo ""
+          echo "gemma3:4b загружена"
+        fi
+      '
+    restart: "no"
+
 volumes:
   rabbitmq_data:
   postgres_data:
