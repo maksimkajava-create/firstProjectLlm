@@ -60,23 +60,30 @@ LLM_POLL_TIMEOUT=120
 
 ### 2. Запусти
 
-```bash
-docker compose up --build
+```PowerShell
+docker compose up -d
 ```
+
+## После успешного запуска контейнеров инициализация БД
+```PowerShell
+docker-compose exec app python init_db.py
+```
+
 
 ### 3. Swagger UI
 
 ```
-http://localhost/docs
+http://localhost/api/docs
 ```
 
 ## Сервисы
 
-| Сервис      | Адрес                  |
-|-------------|------------------------|
-| Swagger UI  | http://localhost/docs  |
-| RabbitMQ UI | http://localhost:15672 |
-| PostgreSQL  | localhost:5432         |
+| Сервис      | Адрес                     |
+|-------------|---------------------------|
+| App UI      | http://localhost/docs     |
+| Swagger UI  | http://localhost/api/docs |
+| RabbitMQ UI | http://localhost:15672    |
+| PostgreSQL  | http://localhost:5432     |
 
 ## Архитектура обработки ML-задач
 
@@ -97,8 +104,7 @@ GET /predict/{task_uuid} → статус задачи
 | `/balance`                       | Текущий баланс                 |
 | `/deposit <сумма>`               | Пополнить баланс               |
 | `/predict <model_id> <f1> <f2>`  | ML-предсказание                |
-|`/prompt   <текст>`               |запрос к LLM (Ollama)           |
-|`/prompt   <model_id> <текст>`    | запрос к конкретной LLM-модели |
+| `/prompt   <текст>`              | Запрос к LLM (Ollama)           |
 | `/history`                       | История запросов               |
 
 
